@@ -34,13 +34,18 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Bundle Release (if secrets present)
-        if: github.ref == 'refs/heads/main' && secrets.KEYSTORE_BASE64 != ''
+        if: github.ref == 'refs/heads/main'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew bundleRelease
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            ./gradlew bundleRelease
+          else
+            echo "Skipping release build - no signing secrets configured"
+          fi
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
